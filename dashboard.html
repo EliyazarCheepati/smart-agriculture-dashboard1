@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Smart Agriculture Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  <script src="firebase.js"></script>
+</head>
+
+<body>
+
+<h1>🌱 Smart Agriculture Dashboard</h1>
+
+<div class="cards">
+  <div class="card">Moisture: <span id="moisture">--</span></div>
+  <div class="card">Temperature: <span id="temp">--</span></div>
+  <div class="card">Humidity: <span id="humidity">--</span></div>
+</div>
+
+<canvas id="chart"></canvas>
+
+<script>
+let db = firebase.database();
+
+const ctx = document.getElementById("chart").getContext("2d");
+
+let chart = new Chart(ctx, {
+  type: 'line',
+  data: {
+    labels: [],
+    datasets: [{
+      label: 'Soil Moisture',
+      data: [],
+      borderColor: 'green',
+      fill: false
+    }]
+  }
+});
+
+db.ref("sensor").on("value", snap => {
+  let data = snap.val();
+
+  if (!data) return;
+
+  document.getElementById("moisture").innerText = data.moisture;
+  document.getElementById("temp").innerText = data.temperature;
+  document.getElementById("humidity").innerText = data.humidity;
+
+  let time = new Date().toLocaleTimeString();
+
+  chart.data.labels.push(time);
+  chart.data.datasets[0].data.push(data.moisture);
+
+  if (chart.data.labels.length > 10) {
+    chart.data.labels.shift();
+    chart.data.datasets[0].data.shift();
+  }
+
+  chart.update();
+});
+</script>
+
+</body>
+</html>
